@@ -3,8 +3,6 @@ require_relative 'constants'
 class Robot
   include Constants
 
-  attr_reader :output
-
   def initialize(initial_position_x, initial_position_y, initial_facing_direction, table_dimensions, commands)
     @position_x = initial_position_x
     @position_y = initial_position_y
@@ -18,7 +16,7 @@ class Robot
   def call
     return unless valid_current_position?
 
-    @commands.map(&method(:execute_command))
+    commands.map(&method(:execute_command))
 
     output
   end
@@ -30,7 +28,8 @@ class Robot
     :facing_direction,
     :table_dimensions,
     :commands,
-    :movement_history
+    :movement_history,
+    :output
 
   def execute_command(event)
     case event[:command]
@@ -53,7 +52,7 @@ class Robot
   end
 
   def report
-    @output = "#{@position_x},#{@position_y},#{@facing_direction}"
+    @output = [position_x, position_y, facing_direction].join(',')
   end
 
   def move_forward
@@ -67,7 +66,7 @@ class Robot
   end
 
   def turn_left
-    @facing_direction = case @facing_direction
+    @facing_direction = case facing_direction
       when COMPASS[:NORTH] then COMPASS[:WEST]
       when COMPASS[:WEST] then COMPASS[:SOUTH]
       when COMPASS[:EAST] then COMPASS[:NORTH]
@@ -77,7 +76,7 @@ class Robot
   end
 
   def turn_right
-    @facing_direction = case @facing_direction
+    @facing_direction = case facing_direction
       when COMPASS[:NORTH] then COMPASS[:EAST]
       when COMPASS[:WEST] then COMPASS[:NORTH]
       when COMPASS[:EAST] then COMPASS[:SOUTH]
@@ -90,7 +89,7 @@ class Robot
     return if valid_current_position?
 
     @movement_history.pop
-    last_position = @movement_history.last
+    last_position = movement_history.last
     # set last position
     @position_x = last_position[:position_x]
     @position_y = last_position[:position_y]
@@ -98,17 +97,17 @@ class Robot
   end
 
   def valid_current_position?
-    @position_y <= @table_dimensions[:y] &&
-      @position_x <= @table_dimensions[:x] &&
-      @position_y >= 0 &&
-      @position_x >= 0
+    position_y <= table_dimensions[:y] &&
+      position_x <= table_dimensions[:x] &&
+      position_y >= 0 &&
+      position_x >= 0
   end
 
   def save_current_state!
     last_command = {
-      position_y: @position_y,
-      position_x: @position_x,
-      facing_direction: @facing_direction
+      position_y: position_y,
+      position_x: position_x,
+      facing_direction: facing_direction
     }
 
     @movement_history << last_command
