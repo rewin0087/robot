@@ -69,9 +69,12 @@ e)
     Output: 3,3,N
 
 ## Setup
+1. Clone repository
+```
+git clone git@github.com:rewin0087/robot.git
+```
 
-Install ruby 3.4.4 first using rbenv or any preferred ruby version manager.
-Install ruby gems depedencies
+2. Install ruby 3.4.4 first using rbenv or any preferred ruby version manager. Install ruby gems depedencies
 
 run:
 ```
