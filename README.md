@@ -1,4 +1,4 @@
-# Toy Robot Simulator
+# Robot Simulator
 
 ## Description
 
@@ -87,7 +87,7 @@ Navigate to root directory and run `bin/console` and this will run a console app
 
 Example:
 ```
-➜  toy_robot git:(main) ✗ bin/console
+➜  robot git:(main) ✗ bin/console
 Please enter your command:
 PLACE 0,0,E
 MOVE
