@@ -20,7 +20,7 @@ RSpec.describe ExecuteCommands do
     subject { described_class.new(complete_commands).call }
 
     it 'execute the commands' do
-      expect(Robot).to receive(:new).with(0, 0, 'N', { x: 6, y: 6 }, commands).and_call_original
+      expect(Robot).to receive(:new).with(0, 0, 'N', { x: 10, y: 10 }, commands, []).and_call_original
 
       is_expected.to eq('1,2,E')
     end

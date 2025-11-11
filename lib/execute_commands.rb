@@ -31,7 +31,8 @@ class ExecuteCommands
       place_command[:position_y],
       place_command[:facing],
       @dimensions,
-      filtered_commands
+      filtered_commands,
+      off_limits
     ).call
   end
 
@@ -41,19 +42,34 @@ class ExecuteCommands
 
   def filter_event(event)
     (
-      event[:command] == Robot::ACTIONS[:PLACE] &&
-      event[:position_x] >= 0 &&
-      event[:position_x] <= dimensions[:x] &&
-      event[:position_y] >= 0 &&
-      event[:position_y] <= dimensions[:y]
+      (
+        event[:command] == Robot::ACTIONS[:PLACE] &&
+        event[:position_x] >= 0 &&
+        event[:position_x] <= dimensions[:x] &&
+        event[:position_y] >= 0 &&
+        event[:position_y] <= dimensions[:y]
+      ) || on_bound?(event)
     ) || actions.include?(event[:command])
+  end
+
+  def on_bound?(event)
+    off_limits.count { |limit| event[:position_x] == limit[:x] && event[:position_y] == limit[:y] }.zero?
   end
 
   def set_dimension(dimension_x, dimension_y)
     @dimensions =  if dimension_x && dimension_y
       { x: dimension_x, y: dimension_y }
     else
-      { x: 6, y: 6 }
+      { x: 10, y: 10 }
     end
+  end
+
+  def off_limits
+    [
+      # { x: 4, y: 4 },
+      # { x: 4, y: 5 },
+      # { x: 5, y: 4 },
+      # { x: 5, y: 5 }
+    ]
   end
 end

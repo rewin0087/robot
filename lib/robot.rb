@@ -3,11 +3,12 @@ require_relative 'constants'
 class Robot
   include Constants
 
-  def initialize(initial_position_x, initial_position_y, initial_facing_direction, table_dimensions, commands)
+  def initialize(initial_position_x, initial_position_y, initial_facing_direction, table_dimensions, commands, off_limits = [])
     @position_x = initial_position_x
     @position_y = initial_position_y
     @facing_direction = initial_facing_direction
     @table_dimensions = table_dimensions
+    @off_limits = off_limits
     @commands = commands
     @movement_history = []
     save_current_state!
@@ -29,7 +30,8 @@ class Robot
     :table_dimensions,
     :commands,
     :movement_history,
-    :output
+    :output,
+    :off_limits
 
   def execute_command(event)
     case event[:command]
@@ -100,7 +102,8 @@ class Robot
     position_y <= table_dimensions[:y] &&
       position_x <= table_dimensions[:x] &&
       position_y >= 0 &&
-      position_x >= 0
+      position_x >= 0 &&
+      off_limits.count { |limit| position_x == limit[:x] && position_y == limit[:y] }.zero?
   end
 
   def save_current_state!
