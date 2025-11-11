@@ -103,7 +103,11 @@ class Robot
       position_x <= table_dimensions[:x] &&
       position_y >= 0 &&
       position_x >= 0 &&
-      off_limits.count { |limit| position_x == limit[:x] && position_y == limit[:y] }.zero?
+      on_bound?
+  end
+
+  def on_bound?
+    off_limits.count { |limit| position_x == limit[:x] && position_y == limit[:y] }.zero?
   end
 
   def save_current_state!
