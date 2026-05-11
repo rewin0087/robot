@@ -14,7 +14,7 @@ RSpec.describe ExecuteCommands do
     end
 
     let(:complete_commands) do
-      [{ command: 'PLACE', position_x: 0, position_y: 0, facing: 'N' }] + commands
+      [{ command: 'PLACE', position_x: 0, position_y: 0, facing_direction: 'N' }] + commands
     end
 
     subject { described_class.new(complete_commands).call }
@@ -27,10 +27,10 @@ RSpec.describe ExecuteCommands do
 
     context 'when has invalid command' do
       let(:complete_commands) do
-        [{ command: 'PALCE', position_x: 0, position_y: 0, facing: 'N' }] + commands
+        [{ command: 'PALCE', position_x: 0, position_y: 0, facing_direction: 'N' }] + commands
       end
 
-      it 'execute the commands' do
+      it 'returns nil' do
         expect(Robot).not_to receive(:new).with(0, 0, 'N', { x: 6, y: 6 }, commands)
 
         is_expected.to be_nil
@@ -42,9 +42,49 @@ RSpec.describe ExecuteCommands do
         [nil] + commands
       end
 
-      it 'execute the commands' do
+      it 'returns nil' do
         expect(Robot).not_to receive(:new).with(0, 0, 'N', { x: 6, y: 6 }, commands)
 
+        is_expected.to be_nil
+      end
+    end
+
+    context 'when PLACE is out of bounds' do
+      let(:complete_commands) do
+        [{ command: 'PLACE', position_x: 11, position_y: 0, facing_direction: 'N' }] + commands
+      end
+
+      it 'returns nil' do
+        is_expected.to be_nil
+      end
+    end
+
+    context 'when PLACE is on an off-limits position' do
+      let(:complete_commands) do
+        [{ command: 'PLACE', position_x: 4, position_y: 4, facing_direction: 'N' }] + commands
+      end
+
+      subject { described_class.new(complete_commands, nil, nil, [{ x: 4, y: 4 }]).call }
+
+      it 'returns nil' do
+        is_expected.to be_nil
+      end
+    end
+
+    context 'when PLACE comes after non-PLACE commands' do
+      let(:complete_commands) do
+        [{ command: 'MOVE' }, { command: 'PLACE', position_x: 0, position_y: 0, facing_direction: 'N' }] + commands
+      end
+
+      it 'skips to the first PLACE command' do
+        is_expected.to eq('1,2,E')
+      end
+    end
+
+    context 'when command list is empty' do
+      subject { described_class.new([]).call }
+
+      it 'returns nil' do
         is_expected.to be_nil
       end
     end

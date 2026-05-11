@@ -10,14 +10,14 @@ class Robot
     @table_dimensions = table_dimensions
     @off_limits = off_limits
     @commands = commands
-    @movement_history = []
-    save_current_state!
+    @last_valid_state = nil
+    snapshot!
   end
 
   def call
     return unless valid_current_position?
 
-    commands.map(&method(:execute_command))
+    commands.each(&method(:execute_command))
 
     output
   end
@@ -29,28 +29,27 @@ class Robot
     :facing_direction,
     :table_dimensions,
     :commands,
-    :movement_history,
     :output,
     :off_limits
 
   def execute_command(event)
-    case event[:command]
-      when ACTIONS[:RIGHT] then turn_right
-      when ACTIONS[:LEFT] then turn_left
-      when ACTIONS[:MOVE] then move_forward
-      when ACTIONS[:REPORT] then report
-      when ACTIONS[:PLACE] then place(event)
-      else nil
-      end
+    snapshot!
 
-    save_current_state!
-    validate_latest_position!
+    case event[:command]
+    when ACTIONS[:REPORT] then report; return
+    when ACTIONS[:RIGHT]  then turn_right
+    when ACTIONS[:LEFT]   then turn_left
+    when ACTIONS[:MOVE]   then move_forward
+    when ACTIONS[:PLACE]  then place(event)
+    end
+
+    restore! unless valid_current_position?
   end
 
   def place(event)
     @position_x = event[:position_x]
     @position_y = event[:position_y]
-    @facing_direction = event[:facing]
+    @facing_direction = event[:facing_direction]
   end
 
   def report
@@ -59,64 +58,52 @@ class Robot
 
   def move_forward
     case @facing_direction
-      when COMPASS[:NORTH] then @position_y += 1
-      when COMPASS[:WEST] then @position_x -= 1
-      when COMPASS[:EAST] then @position_x += 1
-      when COMPASS[:SOUTH] then @position_y -= 1
-      else nil
-      end
+    when COMPASS[:NORTH] then @position_y += 1
+    when COMPASS[:WEST]  then @position_x -= 1
+    when COMPASS[:EAST]  then @position_x += 1
+    when COMPASS[:SOUTH] then @position_y -= 1
+    end
   end
 
   def turn_left
     @facing_direction = case facing_direction
-      when COMPASS[:NORTH] then COMPASS[:WEST]
-      when COMPASS[:WEST] then COMPASS[:SOUTH]
-      when COMPASS[:EAST] then COMPASS[:NORTH]
-      when COMPASS[:SOUTH] then COMPASS[:EAST]
-      else nil
-      end
+    when COMPASS[:NORTH] then COMPASS[:WEST]
+    when COMPASS[:WEST]  then COMPASS[:SOUTH]
+    when COMPASS[:EAST]  then COMPASS[:NORTH]
+    when COMPASS[:SOUTH] then COMPASS[:EAST]
+    end
   end
 
   def turn_right
     @facing_direction = case facing_direction
-      when COMPASS[:NORTH] then COMPASS[:EAST]
-      when COMPASS[:WEST] then COMPASS[:NORTH]
-      when COMPASS[:EAST] then COMPASS[:SOUTH]
-      when COMPASS[:SOUTH] then COMPASS[:WEST]
-      else nil
-      end
-  end
-
-  def validate_latest_position!
-    return if valid_current_position?
-
-    @movement_history.pop
-    last_position = movement_history.last
-    # set last position
-    @position_x = last_position[:position_x]
-    @position_y = last_position[:position_y]
-    @facing_direction = last_position[:facing_direction]
+    when COMPASS[:NORTH] then COMPASS[:EAST]
+    when COMPASS[:WEST]  then COMPASS[:NORTH]
+    when COMPASS[:EAST]  then COMPASS[:SOUTH]
+    when COMPASS[:SOUTH] then COMPASS[:WEST]
+    end
   end
 
   def valid_current_position?
-    position_y <= table_dimensions[:y] &&
-      position_x <= table_dimensions[:x] &&
-      position_y >= 0 &&
-      position_x >= 0 &&
-      on_bound?
+    position_y.between?(0, table_dimensions[:y]) &&
+      position_x.between?(0, table_dimensions[:x]) &&
+      allowed_position?
   end
 
-  def on_bound?
-    off_limits.count { |limit| position_x == limit[:x] && position_y == limit[:y] }.zero?
+  def allowed_position?
+    off_limits.none? { |limit| position_x == limit[:x] && position_y == limit[:y] }
   end
 
-  def save_current_state!
-    last_command = {
-      position_y: position_y,
+  def snapshot!
+    @last_valid_state = {
       position_x: position_x,
+      position_y: position_y,
       facing_direction: facing_direction
     }
+  end
 
-    @movement_history << last_command
+  def restore!
+    @position_x = @last_valid_state[:position_x]
+    @position_y = @last_valid_state[:position_y]
+    @facing_direction = @last_valid_state[:facing_direction]
   end
 end

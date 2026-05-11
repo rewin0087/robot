@@ -107,6 +107,44 @@ RSpec.describe Robot do
 
         it { is_expected.to eq('5,5,N') }
       end
+
+      context 'when initial position is off limits' do
+        subject { described_class.new(1, 1, 'N', { x: 5, y: 5 }, [], [{ x: 1, y: 1 }]).call }
+
+        it { is_expected.to be_nil }
+      end
+
+      context 'when a move would enter an off-limits cell' do
+        let(:position_x) { 1 }
+        let(:position_y) { 0 }
+        let(:commands) do
+          [
+            { command: 'MOVE' },
+            { command: 'REPORT' }
+          ]
+        end
+
+        subject { described_class.new(position_x, position_y, 'N', { x: 5, y: 5 }, commands, [{ x: 1, y: 1 }]).call }
+
+        it 'stays at the last valid position' do
+          is_expected.to eq('1,0,N')
+        end
+      end
+
+      context 'when a mid-sequence PLACE lands on an off-limits cell' do
+        let(:commands) do
+          [
+            { command: 'PLACE', position_x: 2, position_y: 2, facing_direction: 'N' },
+            { command: 'REPORT' }
+          ]
+        end
+
+        subject { described_class.new(0, 0, 'N', { x: 5, y: 5 }, commands, [{ x: 2, y: 2 }]).call }
+
+        it 'reverts to the position before the PLACE' do
+          is_expected.to eq('0,0,N')
+        end
+      end
     end
   end
 end

@@ -11,11 +11,11 @@ ARGF.each_line do |line|
     extracted = ExtractCommand.new(line).call
     commands << extracted
 
-    next unless extracted[:command] == Robot::ACTIONS[:REPORT]
-    outcome =  ExecuteCommands.new(commands).call
+    next unless extracted&.dig(:command) == Robot::ACTIONS[:REPORT]
 
+    outcome = ExecuteCommands.new(commands).call
     puts "OUTPUT: #{outcome}"
   rescue StandardError => e
-    puts "Invalid command: #{e.message}"
+    puts "Error: #{e.message}"
   end
 end

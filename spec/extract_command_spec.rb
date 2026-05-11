@@ -8,9 +8,28 @@ RSpec.describe ExtractCommand do
     subject { described_class.new(line).call }
 
     context 'when PLACE command' do
-      let(:expected) { { command: 'PLACE', position_x: 0, position_y:0, facing: 'N' } }
+      let(:expected) { { command: 'PLACE', position_x: 0, position_y: 0, facing_direction: 'N' } }
 
       it { is_expected.to eq(expected) }
+    end
+
+    context 'when PLACE command with spaces around coordinates' do
+      let(:line) { 'PLACE 0, 0, N' }
+      let(:expected) { { command: 'PLACE', position_x: 0, position_y: 0, facing_direction: 'N' } }
+
+      it { is_expected.to eq(expected) }
+    end
+
+    context 'when PLACE command with negative x' do
+      let(:line) { 'PLACE -1,0,N' }
+
+      it { is_expected.to be_nil }
+    end
+
+    context 'when PLACE command with negative y' do
+      let(:line) { 'PLACE 0,-1,N' }
+
+      it { is_expected.to be_nil }
     end
 
     context 'when LEFT command' do

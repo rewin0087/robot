@@ -1,27 +1,21 @@
 class ExecuteCommands
-  attr_accessor :dimensions,
-    :commands
-
-  def initialize(commands = [], dimension_x = nil, dimension_y = nil)
+  def initialize(commands = [], dimension_x = nil, dimension_y = nil, off_limits = [])
     set_dimension(dimension_x, dimension_y)
-    @commands =  commands.compact
-    @actions = Robot::ACTIONS.clone.values
-    @actions.delete('PLACE')
+    @commands = commands.compact
+    @off_limits = off_limits
+    @actions = Robot::ACTIONS.values.reject { |a| a == Robot::ACTIONS[:PLACE] }
   end
 
   def call
-    filtered_commands = commands.select(&method(:filter_event))
-    place_command = filtered_commands.shift
-    total_commands = filtered_commands.size
+    filtered = commands.select(&method(:filter_event))
+    place_command = filtered.shift
 
-    if place_command[:command] != Robot::ACTIONS[:PLACE]
-      place_command = nil
-      next_place_command_index = filtered_commands.index{|c| c[:command] == Robot::ACTIONS[:PLACE] }
+    if place_command.nil? || place_command[:command] != Robot::ACTIONS[:PLACE]
+      place_index = filtered.index { |c| c[:command] == Robot::ACTIONS[:PLACE] }
+      return if place_index.nil?
 
-      unless next_place_command_index.nil?
-        @filtered_commands = filtered_commands[next_place_command_index..total_commands]
-        place_command = @filtered_commands.shift
-      end
+      filtered = filtered[place_index..]
+      place_command = filtered.shift
     end
 
     return if place_command.nil?
@@ -29,47 +23,38 @@ class ExecuteCommands
     Robot.new(
       place_command[:position_x],
       place_command[:position_y],
-      place_command[:facing],
-      @dimensions,
-      filtered_commands,
+      place_command[:facing_direction],
+      dimensions,
+      filtered,
       off_limits
     ).call
   end
 
   private
 
-  attr_reader :commands, :dimensions, :actions
+  attr_reader :commands, :dimensions, :actions, :off_limits
 
   def filter_event(event)
-    (
-      (
-        event[:command] == Robot::ACTIONS[:PLACE] &&
-        event[:position_x] >= 0 &&
+    if event[:command] == Robot::ACTIONS[:PLACE]
+      event[:position_x] >= 0 &&
         event[:position_x] <= dimensions[:x] &&
         event[:position_y] >= 0 &&
-        event[:position_y] <= dimensions[:y]
-      ) || on_bound?(event)
-    ) || actions.include?(event[:command])
+        event[:position_y] <= dimensions[:y] &&
+        allowed_position?(event)
+    else
+      actions.include?(event[:command])
+    end
   end
 
-  def on_bound?(event)
-    off_limits.count { |limit| event[:position_x] == limit[:x] && event[:position_y] == limit[:y] }.zero?
+  def allowed_position?(event)
+    off_limits.none? { |limit| event[:position_x] == limit[:x] && event[:position_y] == limit[:y] }
   end
 
   def set_dimension(dimension_x, dimension_y)
-    @dimensions =  if dimension_x && dimension_y
+    @dimensions = if dimension_x && dimension_y
       { x: dimension_x, y: dimension_y }
     else
       { x: 10, y: 10 }
     end
-  end
-
-  def off_limits
-    [
-      # { x: 4, y: 4 },
-      # { x: 4, y: 5 },
-      # { x: 5, y: 4 },
-      # { x: 5, y: 5 }
-    ]
   end
 end
