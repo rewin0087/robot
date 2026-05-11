@@ -7,9 +7,8 @@ puts 'Please enter your command:'
 commands = []
 ARGF.each_line do |line|
   begin
-    commands.compact!
     extracted = ExtractCommand.new(line).call
-    commands << extracted
+    commands << extracted if extracted
 
     next unless extracted&.dig(:command) == Robot::ACTIONS[:REPORT]
 

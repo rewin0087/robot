@@ -32,6 +32,18 @@ RSpec.describe ExtractCommand do
       it { is_expected.to be_nil }
     end
 
+    context 'when PLACE command with non-numeric coordinates' do
+      let(:line) { 'PLACE abc,0,N' }
+
+      it { is_expected.to be_nil }
+    end
+
+    context 'when command contains PLACE as a substring' do
+      let(:line) { 'REPLACEME 0,0,N' }
+
+      it { is_expected.to be_nil }
+    end
+
     context 'when LEFT command' do
       let(:line) { 'LEFT' }
       let(:expected) { { command: 'LEFT' } }

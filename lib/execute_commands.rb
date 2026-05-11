@@ -1,3 +1,5 @@
+require_relative 'robot'
+
 class ExecuteCommands
   def initialize(commands = [], dimension_x = nil, dimension_y = nil, off_limits = [])
     set_dimension(dimension_x, dimension_y)
@@ -17,8 +19,6 @@ class ExecuteCommands
       filtered = filtered[place_index..]
       place_command = filtered.shift
     end
-
-    return if place_command.nil?
 
     Robot.new(
       place_command[:position_x],

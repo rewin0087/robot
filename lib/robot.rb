@@ -10,7 +10,6 @@ class Robot
     @table_dimensions = table_dimensions
     @off_limits = off_limits
     @commands = commands
-    @last_valid_state = nil
     snapshot!
   end
 
@@ -36,7 +35,9 @@ class Robot
     snapshot!
 
     case event[:command]
-    when ACTIONS[:REPORT] then report; return
+    when ACTIONS[:REPORT]
+      report
+      return
     when ACTIONS[:RIGHT]  then turn_right
     when ACTIONS[:LEFT]   then turn_left
     when ACTIONS[:MOVE]   then move_forward
@@ -57,7 +58,7 @@ class Robot
   end
 
   def move_forward
-    case @facing_direction
+    case facing_direction
     when COMPASS[:NORTH] then @position_y += 1
     when COMPASS[:WEST]  then @position_x -= 1
     when COMPASS[:EAST]  then @position_x += 1
