@@ -54,15 +54,19 @@ class Robot
   end
 
   def report
-    @output = [position_x, position_y, facing_direction].join(',')
+    @output = [position_x, position_y, facing_direction].join(',').encode('UTF-8')
   end
 
   def move_forward
     case facing_direction
-    when COMPASS[:NORTH] then @position_y += 1
-    when COMPASS[:WEST]  then @position_x -= 1
-    when COMPASS[:EAST]  then @position_x += 1
-    when COMPASS[:SOUTH] then @position_y -= 1
+    when COMPASS[:NORTH] then
+      @position_y = move_to_with_corner(position_y + 1, fallback_step: 0, limit_coordinate: :y)
+    when COMPASS[:WEST]  then
+      @position_x = move_to_with_corner(position_x - 1, fallback_step: table_dimensions[:x], limit_coordinate: :x)
+    when COMPASS[:EAST]  then
+      @position_x = move_to_with_corner(position_x + 1, fallback_step: 0, limit_coordinate: :x)
+    when COMPASS[:SOUTH] then
+      @position_y = move_to_with_corner(position_y - 1, fallback_step: table_dimensions[:y], limit_coordinate: :y)
     end
   end
 
@@ -106,5 +110,19 @@ class Robot
     @position_x = @last_valid_state[:position_x]
     @position_y = @last_valid_state[:position_y]
     @facing_direction = @last_valid_state[:facing_direction]
+  end
+
+  def move_to_with_corner(step, fallback_step:, limit_coordinate:)
+    limit = table_dimensions[limit_coordinate]
+    corners = [0, limit]
+    other_limit = table_dimensions[limit_coordinate == :x ? :y : :x]
+    other_position = limit_coordinate == :x ? position_y : position_x
+    other_corners = [0, other_limit]
+
+    if !step.between?(*corners) && other_corners.include?(other_position)
+      step = fallback_step
+    end
+
+    step
   end
 end

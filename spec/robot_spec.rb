@@ -105,7 +105,35 @@ RSpec.describe Robot do
           ]
         end
 
-        it { is_expected.to eq('5,5,N') }
+        it { is_expected.to eq('5,2,N') }
+      end
+
+      context 'scenario G - when at the corner facing south' do
+        let(:position_x) { 0 }
+        let(:position_y) { 0 }
+        let(:facing_direction) { 'S' }
+        let(:commands) do
+          [
+            { command: 'MOVE' },
+            { command: 'REPORT' }
+          ]
+        end
+
+        it { is_expected.to eq('0,5,S') }
+      end
+
+      context 'scenario H - when at the edge facing west' do
+        let(:position_x) { 0 }
+        let(:position_y) { 3 }
+        let(:facing_direction) { 'W' }
+        let(:commands) do
+          [
+            { command: 'MOVE' },
+            { command: 'REPORT' }
+          ]
+        end
+
+        it { is_expected.to eq('0,3,W') }
       end
 
       context 'when initial position is off limits' do
