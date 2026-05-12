@@ -59,14 +59,10 @@ class Robot
 
   def move_forward
     case facing_direction
-    when COMPASS[:NORTH] then
-      @position_y = move_to_with_corner(position_y + 1, fallback_step: 0, limit_coordinate: :y)
-    when COMPASS[:WEST]  then
-      @position_x = move_to_with_corner(position_x - 1, fallback_step: table_dimensions[:x], limit_coordinate: :x)
-    when COMPASS[:EAST]  then
-      @position_x = move_to_with_corner(position_x + 1, fallback_step: 0, limit_coordinate: :x)
-    when COMPASS[:SOUTH] then
-      @position_y = move_to_with_corner(position_y - 1, fallback_step: table_dimensions[:y], limit_coordinate: :y)
+    when COMPASS[:NORTH] then @position_y = advance(position_y, by: +1, along: :y, wraps_to: 0)
+    when COMPASS[:SOUTH] then @position_y = advance(position_y, by: -1, along: :y, wraps_to: table_dimensions[:y])
+    when COMPASS[:EAST]  then @position_x = advance(position_x, by: +1, along: :x, wraps_to: 0)
+    when COMPASS[:WEST]  then @position_x = advance(position_x, by: -1, along: :x, wraps_to: table_dimensions[:x])
     end
   end
 
@@ -112,17 +108,12 @@ class Robot
     @facing_direction = @last_valid_state[:facing_direction]
   end
 
-  def move_to_with_corner(step, fallback_step:, limit_coordinate:)
-    limit = table_dimensions[limit_coordinate]
-    corners = [0, limit]
-    other_limit = table_dimensions[limit_coordinate == :x ? :y : :x]
-    other_position = limit_coordinate == :x ? position_y : position_x
-    other_corners = [0, other_limit]
+  def advance(current, by:, along:, wraps_to:)
+    new_pos = current + by
+    perp_axis = along == :x ? :y : :x
+    perp_pos = along == :x ? position_y : position_x
+    at_perp_edge = perp_pos == 0 || perp_pos == table_dimensions[perp_axis]
 
-    if !step.between?(*corners) && other_corners.include?(other_position)
-      step = fallback_step
-    end
-
-    step
+    !new_pos.between?(0, table_dimensions[along]) && at_perp_edge ? wraps_to : new_pos
   end
 end
